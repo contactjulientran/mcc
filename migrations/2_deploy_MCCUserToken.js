@@ -1,4 +1,4 @@
-var MCCUserToken = artifacts.require("./MCCUserToken.sol");
+const MCCUserToken = artifacts.require("./MCCUserToken.sol");
 
 module.exports = function (deployer) {
   deployer.deploy(MCCUserToken);
