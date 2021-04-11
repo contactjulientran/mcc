@@ -1,11 +1,17 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
+import { AppContext } from "./libs/contextLib";
+import MCCUserToken from "./contracts/MCCUserToken.json";
+import FidelityToken from "./contracts/FidelityToken.json";
 import getWeb3 from "./getWeb3";
 
+import Navbar from "react-bootstrap/Navbar";
+import Nav from "react-bootstrap/Nav";
+import { LinkContainer } from "react-router-bootstrap";
 import "./App.css";
+import Routes from "./Routes";
 
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  state = { accounts: null, contractFTK: null, contractMUT: null, usersCount: 0, web3: null };
 
   componentDidMount = async () => {
     try {
@@ -15,17 +21,22 @@ class App extends Component {
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
 
-      // Get the contract instance.
+      // Get the smart contracts FTK and MUT
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = SimpleStorageContract.networks[networkId];
-      const instance = new web3.eth.Contract(
-        SimpleStorageContract.abi,
-        deployedNetwork && deployedNetwork.address,
+      const deployedNetworkFTK = FidelityToken.networks[networkId];
+      const contractFTK = new web3.eth.Contract(
+        FidelityToken.abi,
+        deployedNetworkFTK && deployedNetworkFTK.address,
+      );
+      const deployedNetworkMUT = MCCUserToken.networks[networkId];
+      const contractMUT = new web3.eth.Contract(
+        MCCUserToken.abi,
+        deployedNetworkMUT && deployedNetworkMUT.address,
       );
 
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.runExample);
+      this.setState({ accounts, contractMUT, contractFTK, web3 }, this.loadUsersCount);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -35,39 +46,43 @@ class App extends Component {
     }
   };
 
-  runExample = async () => {
-    const { accounts, contract } = this.state;
-
-    // Stores a given value, 5 by default.
-    await contract.methods.set(5).send({ from: accounts[0] });
+  loadUsersCount = async () => {
+    const { accounts, contractMUT } = this.state;
 
     // Get the value from the contract to prove it worked.
-    const response = await contract.methods.get().call();
+    const usersCount = await contractMUT.methods.balanceOf(accounts[0]).call();
 
-    // Update state with the result.
-    this.setState({ storageValue: response });
+    this.setState({ usersCount });
   };
 
   render() {
+    const { accounts, contractFTK, contractMUT, usersCount, web3 } = this.state;
+
     if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
     return (
-      <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 40</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
+      <div className="App container py-3">
+        <Navbar collapseOnSelect bg="light" expand="md" className="mb-3">
+          <LinkContainer to="/">
+            <Navbar.Brand className="font-weight-bold text-muted">
+              MCC (My Commerçant Connecté)
+          </Navbar.Brand>
+          </LinkContainer>
+          <Navbar.Toggle />
+          <Navbar.Collapse className="justify-content-end">
+            <Nav activeKey={window.location.pathname}>
+              <span className="App-demo">DEMO pour la certification ALYRA</span>
+            </Nav>
+          </Navbar.Collapse>
+        </Navbar>
+        <AppContext.Provider value={{ accounts, contractFTK, contractMUT, usersCount, web3 }}>
+          <Routes />
+        </AppContext.Provider>
       </div>
     );
   }
 }
 
 export default App;
+

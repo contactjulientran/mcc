@@ -1,0 +1,9 @@
+.ListUsers {
+  text-align: center;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 600;
+}
+
+.ListUsers p {
+  text-align: center;
+}
