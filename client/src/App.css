@@ -1,5 +1,4 @@
 .App {
-  text-align: center;
 }
 
 .App-logo {
@@ -18,5 +17,19 @@
 }
 
 .App-link {
+  text-align: center;
   color: #09d3ac;
+}
+
+.App-demo {
+  text-align: center;
+  color: hsl(0, 92%, 46%);
+}
+
+.App-desc {
+  font-size: 0.9em;
+}
+
+ol li {
+  color: hsl(240, 89%, 29%);
 }

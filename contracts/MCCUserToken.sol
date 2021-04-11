@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.11;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -17,32 +18,36 @@ contract MCCUserToken is ERC721, Ownable {
     event SpentEUR(uint256 userId, uint256 amount, string typeSpent);
 
     struct User {
-        bytes32 emailHash; // the email is hashed to preserve anonimity
+        string emailHash; // the email is hashed to preserve anonimity
+        address account; // account that holds FTK
         uint256 totalSpentEUR; // 3 decimals, 1 EUR = 1000
     }
 
     /**
-     * @dev The list of MCC users.
-     */
-    User[] public users;
-
-    /**
      * @dev This mapping keeps track of emails already used for users. The hash of the email is used to preserve anonimity.
      */
-    mapping(bytes32 => bool) private emailHashes;
+    mapping(string => bool) private emailHashes;
+
+    /**
+     * @dev The list of MCC users.
+     */
+    User[] private users;
 
     constructor() public ERC721("MCC User Token", "MUT") {}
+
+    function getUsers() external view returns (User[] memory){
+        return users;
+    }
 
     modifier userExists(uint256 userId) {
         require(userId < users.length, "User not exist");
         _;
     }
 
-    function createUser(string memory email) external onlyOwner {
-        bytes32 emailHash = keccak256(abi.encodePacked(email));
+    function createUser(string memory emailHash, address addr) external onlyOwner {
         require(!emailHashes[emailHash], "Email already used");
         emailHashes[emailHash] = true;
-        users.push(User(emailHash, 0));
+        users.push(User(emailHash, addr, 0));
         uint256 userId = users.length - 1;
         emit NewUser(userId);
 
